@@ -1,0 +1,182 @@
+HTMLView - For creating web userinterfaces to DBI databases.
+(c) Copyright 1998-2000 Hakan Ardo <hakan@debian.org>
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+
+
+Description
+-----------
+
+HTMLView is a set of modules to handle relational SQL databases
+through a DBI interface and create web userinterfaces to them. Among
+it's features are the possibility to handle relations in the same
+manner as fields and it is easily extended with additional field or
+relation specifications as well as custom editors and viewers.
+
+HTMLView contains a query language based on SQL, but extended to allow
+easy inclusion of relations in the queries. Say you have a Users
+table with an N2N relation, called grp, to a Groups table you can select
+users from the Users table based on the name field in the Groups
+table by selecting on grp->name (eg "grp->name = 'sudo'" would match
+all users belonging to the group named sudo while "grp->gid = 27" would
+match all users belonging to the group with gid 27).
+
+There is also a fmt language used to specify how the data in a post
+or a set of posts should be presented. It works in a template like way
+with a html like format, and it can be specified on a PostSet, Post or
+Relation/Field level.
+
+It's most frequent use is that it allows you to write a fmt file and
+in it place a "<node>...</node>" construct, which will repeat the
+"..." part for every post that's supposed to be viewed. It can contain 
+"<fld name>" tags which will be replaced by the fld (field or relation)
+named name. It's also possible to specify how that data in an fld
+should be viewed by instead using the "<fmt name>...</fmt>" where
+"..." is a new fmt string used to view the fld. This is especially
+useful for relations as it allows you to specify exactly how the
+related posts should be presented.
+
+It's also possible to insert perl code that's executed using
+"<perl>...</perl>" constructs. Se the README.fmt file for a complete
+description of the language.
+
+For a simple example se the Test2.fmt file which will work together
+with the Test2 table from the set of test tabels used by test.pl. To
+view the content of the entire table, try:
+
+  Formated2.cgi?tab=Test1&fmt=Test1
+
+This package has over the years grown quite big and quite slow. So
+it's now possible to compile your fmt's into some realy fast perl
+code. This code can then be compiled and placed in memroy reday to be
+presented to the users. This can be done either by the Apache mod_perl
+module Apache::HTMLView avalible on cpan. See it's README for a 
+description on how to set that up. Or by the fmt_srv.pl which is a 
+little webserver written in perl designed to present those fmts and 
+some static html files as fast as possible, which means everything is
+loaded into memory.
+
+For a list of tags you can use when you write your fmt files, see
+README.fmt. Some tags are only avavlible for the compiled fmts and not
+for the fmt used by Formated2.cgi. These are described in
+README.compiled_fmt.
+
+Build and Install
+-----------------
+
+All you have to do to build, test and install this stuff, if your
+connected to the Internet, is:
+
+perl Makefile.PL
+make
+make test
+make install
+
+This will run the tests on a database named HTMLViewTester in a local
+mysql server which you'll have to create first, se the config.pm file
+if you don't know howto.
+
+The default tests uses a mySQL database which means that you'll need 
+DBD::mySQL in order to run them. The config.pm file also contains 
+instructions on how to set up a test database for mSQL, and in that
+case you'll of course need DBD::msql instead. You should be able to
+use this system with other database engines as well and in that case
+you'll need their DBD's. 
+
+Usage Overview 
+--------------
+
+NOTE: This section is quite out of date and as it does not describe
+the compied fmts which are the sugested way to use this.
+
+This system  is based on a central DBIx::HTMLView::DB object, $db,
+that contains the definition of the database and it's tables. It is
+constructed with the shortcuts in the DBIx::HTMLView package (se it's
+manpage for details). This object is defined in config.pm for the test
+database and then that file used by both the test.pl script and the
+example cgi scripts.
+
+Each table inside the database class is defined with a
+DBIx::HTMLView::Table object $tab which you'll get hold of with
+$db->tab('table name'). This object can then be used the list the
+posts in that table using $tab->list. That will return a
+DBIx::HTMLView::PostSet object with the posts in form of
+DBIx::HTMLView::Post objects.
+
+Post and Table object are in build up of several DBIx::HTMLView::Fld
+objects describing the fields and relations. For Posts this object
+contains both the structure of it and the data contained in them. In 
+the case of the Table it's of course only the structure. Those Fld
+objects are returned by the fld('fld name') method that is defined
+both for Table and Post objects.
+
+To then view your data there is the method view_fmt It will output
+the object according to a fmt string that in a HTML like way allows you to
+format your Posts or PostSets in any way you like. The fmt strings can
+either be defined as a parameter to view_fmt or as a predefined format in
+the table definition.
+
+There are a few predefined formates: view_html, edit_html, view_text. That
+is used to create the default ways of viewing and editing the tables, and
+they can also be used as a base for a custom fmt. For info on the fmt
+language se the README.fmt file.
+
+There are two standard editors one for the entire database,
+DBIx::HTMLView::CGIListView, which then calls another editor, usually
+the DBIx::HTMLView::CGIReqEdit editor that's used for editing single
+posts. 
+
+All this is controlled by the View.cgi script which decides what
+editors should be used and when. It also sets all the parameters to
+the editors and can be used to give flds default values or make sanity 
+checks on the data typed by the user.
+
+The Formated2.cgi script is used to generate nicely formated output,
+both viewers and editors, specified by a separate .fmt file. The .fmt
+should contain a fmt string designed to view a PosetSet. The script has two
+parameters to control this. It is tab which should be set to the table name
+to use and it is fmt which should be set to the fmt file to use. The path
+where fmt files are searched for is specified at the top of the cgi script.
+
+There is three ways to specify which posts should be viewed. Both is
+done through setting cgi variables. Either you set the sel to a
+search string as expected by the DBIx::HTMLView::Table::list method, or 
+you set flds to a coma-separated (ie ", ") list of flds and query to a 
+string which should be search for in all those flds. Finely you can
+leave everything empty and all posts will be displayed.
+
+There is also the Formated.cgi script, which is mainly there for backwards
+compatibility. It works just like Formated2.cgi but it wants it's fmt file
+in a different (less smooth) format. It should contain three fields: HEAD, 
+NODE and FOOT (se the example Test2.fmt on how to defined them). All tree of 
+them is supposed to contain perl code that is executed at appropriate times. 
+HEAD is executed as the first thing done, NODE once for ever matched post
+with $_ set to the current DBIx::HTMLView::Post object and FOOT at the end.
+
+Mailinglist
+-----------
+
+There is a mailing list for announcements and questions about HTMLView 
+if you have any problems using it or questions about it you can mail
+to htmlview@af.lu.se. If you want to subscribe to that list send a
+mail to majordomo@af.lu.se with the body:
+
+  subscribe htmlview <your email address>
+
+
+Author
+------
+
+  Håkan Ardö <hakan@debian.org>

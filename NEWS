@@ -1,0 +1,175 @@
+0.9
+ * Added push and pop functions for the presentation of the fmt 
+   templates to produce an hierarchical interface, much like 
+   common pop-up requesters.
+ * Added README.compiled_fmt describing the special tags avalible 
+   in a compiled fmt.
+ * <sql_val ...> added, which is used to select some arbetrary sql 
+   command and insert into fld.
+ * <fld ...> and <fmt ..> now takes options as name=value which 
+   then are accessable in the below fmt as <var name>.
+ * Added fld options makeing <fld file=filename field> the same as
+   <fmt field>contetnt of file filenmae</fmt>. <fld file=filename>
+   would be a normal file include.
+ * Björn Ardö <f98ba@efd.lth.se> has added:
+     + no_create option to N2N to prevet automatic linktable creation
+     + $dbi->print_only debug mode (See HTMLView::DB man page)
+     + Apache mod_perl support for compiled fmts
+     + extra_{select,from,where} options to SubTab
+ * Giuseppe Costantino <costanti@students.cs.unibo.it> has contributed
+   with quite som additions, including:
+     + Multilevel ordering in CGIListView
+     + Easy to use filtering in CGIListView
+     + Loggin of all database modifications, simply set a logfilename by 
+       $dbi->setlogfile('filename');
+     + Oracle support, simply use OracelDB instead of mysqlDB or msqlDB
+     + Client side javascript sainty checks fld and table specifik (see 
+       exmaple .js files)
+     + Server side perl sainty checks in View.cgi, place in checkparam.
+ * Speeded up seraches that returns a lot of data.
+ * Added a new relationtype called SubTab allowing posts to contain
+   a list of posts form a related table.
+ * Added a short_add feature that lets you specify a fld that
+   describes a add form which is placed at the bottom of the 
+   table listing (see config.pm for eaxmple).
+ * Added a $opt param to the Table constructor to give a few options
+   to it. Currently there are options for specifying which fields to
+   view in a listing (flds_to_view), how many rows per page should
+   be used (rows) and for the short_add feature described above.
+ * Added support for searching multi level relations, eg 
+   Lnk->Link->testf=7.
+ * Optimized fmt handling viewing an fmt with only fields are now 
+   72% faster. The same optimations should be appliable for relations.
+ * Added an Order fld that allows you to specify one order the posts 
+   can be displayed in.
+ * Moved the viewer pointer to the DB class where it's accessable 
+   from everywhere as db->viewer. Which means you should add the
+   following line to old View.cgi scripts before $v->view_html
+   is called: 
+     if ($v->isa('DBIx::HTMLView::CGIView')) {$dbi->viewer($v);}
+ * Added a N2NOrder field that relates a post to a set of posts
+   from another table in a specifik order.
+ * Added a compiler (comp.pl) that compiles a fmt and a search string 
+   into a perlscript that executes up to 8 times faster than 
+   Formated2.cgi. Not all features are supported in compiled fmts
+   though.
+ * Added support to make abetrary selects from compiled fmts 
+   using <sql_select from=... where=... extra=...> construcst.
+ * Added support for <fld ...> tags within <perl>...</perl> code
+   in compiled fmt's.
+ * Perl code in <perl>...</perl> tags are no longer executed with 
+   use strict vars, and all code are executed in the same context 
+   (package fmt_code).
+
+0.7
+ * Added a Date field fld.
+ * Added patch from "Eric E. Coe" <ecoe@reportweb.com> that makes 
+   CGIListView work even when your id column is not named id.
+ * Added a new typed called Tree for easy creation of tree structure 
+   datatypes.
+ * Anders Westrup <anders@barbanet.com> added a Table::count method 
+   to count the number of hits.
+ * From a patch by Konrad Riedel <k.riedel@gmx.de> the folowing features 
+   was derived:
+     + input_type param added to N2One that specifying what kind of
+       html objects should be used for editing it. Possible values are
+       "radio" (default) and "select".
+     + Split up the result shown in a CGIListView i multiple pages
+     + Click on a columname to sort the CGIListView by the column
+     + CGIGermanListView a translated version of CGIListView with a new 
+       layout.
+     (The editable id's are not included by default as they break a few
+      things, see editable_id.README.)
+ * Quite som spelling and gramma correction from above patches and from 
+   Bryon Bean <bbean@timebridge.com>.
+ * Reformated all code to use 8 space tabs and 2 space indention as 
+   sugested by "Eric E. Coe" <ecoe@reportweb.com>.
+ * Anders Westrup <anders@barbanet.com> added a _done param to View.cgi
+   that makes it send a Location: redirect to that url after preforming
+   the update or delete action instread of bringing up an editor. There 
+   is also a _done2 param forcing CGIQueryEdit to set the _done param to
+   this value (eg makes the browser jump to this address after the 
+   edit/add is done).
+
+0.6.1
+ * Fixed bug preventing adding, and updating posts with no other fields
+   than the id field.
+ * Fixed bug that got fields from diffrent tabels with the same name 
+   mixed up when selecting related data. There still might be a
+   problem when not selecting all fields of a post, then the not
+   selected fields may show up as the fields with the same name from 
+   the other tabels that where selected.
+ * Rewrote Test2.fmt to work with the new Formated2.cgi
+ * Fixed bug in Formated2.cgi preventing the FLD param from working
+ * Added Table::noid_list method
+
+0.6
+ * Added N2One relations
+ * An Int value set to "" will now be set to NULL in the db
+ * Added view_fmt method to PostSet, Post and Fld classes. It will output
+   the object acording to a fmt string that in a HTML like way allows you to
+   format your Posts or PostSets in any way you like.
+
+0.5
+ * View.cgi now optionally asks for username and passwords which are passed 
+   on to the database server. With the mySQL access system this allows you
+   to apply access restrictions on Database, Table or Field basis.
+ * Added a rows method to PostSet reporting the number of rows matched.
+ * Made quite some additional parameters customizable by the $data hash in 
+   the Fld constructor including display and store values for Bool, the sql
+   sizes and types of all flds, the sizes of <input ...> boxes.
+ * Splited the DB object into msqlDB and mysqlDB (the HTMLView::DB method 
+   points to msqlDB for backwards compatibility).
+ * Applied some chnages by Richard Braakman <dark@xs4all.nl> that:
+   - Fixed up the docs with quite some spell corrections
+   - Made sure that the field data is propperly escaped both in the html 
+     forms and the sql requests.
+   - Added a Bool Fld
+   - Added a mysqlDB class for using mySQL database engines.
+
+0.4 
+  The interface has been rearrange into a more natural structure, based
+  on DB, Table, Post, Field ... objects instead of just a bunch of
+  commonly used procedures. The idea is to be able to handle relations
+  and fields in the same way whenever possible and to make it easy to
+  add custom Field, Database or Relation objects handling different
+  kinds of fields or relation or even database handling routines.
+
+	All the features of the old HTMLView code is still there, plus quite 
+  a few new ones (see the docs). As for the previous TODO list what
+  I've got into this new stuff is just the following things:
+
+  * Move all Post handling to to HTMLView::Post and use it.
+
+      As I said all methods are now split up into this kind of objects
+
+  * Autodetect the part of $flds that's in $where in HTMLView::ViewList
+
+      Actually the selection code is much more advanced now, you just
+      specify the where clause (which might even contains field names
+      like 'group->name' to match the name field in a related table
+      through the relation group)
+
+  * List methods that might have to be changed if using a different DBD
+
+      Actually they're all placed in a separate DB class which can be
+      subclassed and the methods needing changing can be overloaded.
+
+0.3
+  * Added HTMLView::ViewData method for simplifying wrting customized 
+    viewing scripts.
+  * Added example script Formated.cgi for viewing posts in a formated 
+    way.
+  * Added HTMLView::ViewList method that allows you to simply make complex
+    relation based searchings and then disply the result.
+0.2
+  * Wrote a QuickStart tutorial taking you through the first steps of 
+    setting up an database interface.
+  * Made sure all the SYNOPSIS code and the View.cgi script runs as they 
+    are (that is they contain working example databse names).
+  * Corrected some old out of date statements in the docs as reported by 
+    Ronald Emaus <Ronald.Emaus@wl.com>.
+  * Cleand up the docs
+        * Some code cleanup and bugfixes
+0.1
+  * First public release.
